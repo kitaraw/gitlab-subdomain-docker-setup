@@ -30,7 +30,6 @@ fi
 
 # Убедимся, что необходимые пакеты установлены
 echo "Установка необходимых пакетов..."
-apt update -y
 apt install -y curl gnupg certbot docker.io
 
 # Установка Docker Compose
