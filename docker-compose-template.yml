@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    restart: always
+    hostname: '{{DOMAIN}}'
+    ports:
+      - "{{HTTP_PORT}}:80"    # HTTP доступ
+      - "{{HTTPS_PORT}}:443"  # HTTPS доступ
+      - "{{SSH_PORT}}:22"     # SSH доступ
+    volumes:
+      - ./gitlab-config:/etc/gitlab   # Настройки
+      - ./gitlab-logs:/var/log/gitlab # Логи
+      - ./gitlab-data:/var/opt/gitlab # Данные
+      - ./ssl:/etc/gitlab/ssl         # Сертификаты
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://{{DOMAIN}}'
+        nginx['ssl_certificate'] = "/etc/gitlab/ssl/{{DOMAIN}}.crt"
+        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/{{DOMAIN}}.key"
+        gitlab_rails['gitlab_shell_ssh_port'] = {{SSH_PORT}}
+        letsencrypt['enable'] = true
+        letsencrypt['contact_emails'] = ['admin@{{DOMAIN}}']
+        letsencrypt['auto_renew'] = true
+    shm_size: '256m'
+    deploy:
+      resources:
+        limits:
+          memory: 8G   # Максимальный объем памяти (8 ГБ)
+          cpus: '2.0'  # Максимум 2 CPU
+        reservations:
+          memory: 4G   # Минимальный объем памяти (4 ГБ)
+          cpus: '1.0'  # Минимум 1 CPU
+
+networks:
+  default:
+    driver: bridge
+
+volumes:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:
